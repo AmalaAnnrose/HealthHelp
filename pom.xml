@@ -14,11 +14,11 @@
     </properties>
      <dependencies>
         <dependency>
-            <groupId>com.amazon.alexa</groupId>
-            <artifactId>alexa-skills-kit</artifactId>
-            <version>1.1.2</version>
-            <scope>compile</scope>
-        </dependency>
+   		 <groupId>com.amazon.alexa</groupId>
+    		<artifactId>alexa-skills-kit</artifactId>
+   		 <version>1.1.2</version>
+		</dependency>
+
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-server</artifactId>
@@ -123,12 +123,10 @@
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>4.11</version>
-            <scope>test</scope>
-            <type>jar</type>
-        </dependency>
+         <groupId>junit</groupId>
+          <artifactId>junit</artifactId>
+           <version>4.8.1</version>
+           </dependency>
     </dependencies>
     
     <build>

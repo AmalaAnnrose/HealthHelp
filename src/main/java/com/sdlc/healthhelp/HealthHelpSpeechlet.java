@@ -10,7 +10,6 @@ package com.sdlc.healthhelp;
     or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
  */
 
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,120 +25,134 @@ import com.amazon.speech.speechlet.SpeechletResponse;
 import com.amazon.speech.ui.PlainTextOutputSpeech;
 import com.amazon.speech.ui.Reprompt;
 import com.amazon.speech.ui.SimpleCard;
+import com.sdlc.healthhelp.util.AnalyticsManager;
+import com.sdlc.healthhelp.util.SpeechletResponseHelper;
 
 /**
- * This sample shows how to create a simple speechlet for handling speechlet requests.
+ * This sample shows how to create a simple speechlet for handling speechlet
+ * requests.
  */
 public class HealthHelpSpeechlet implements Speechlet {
-    private static final Logger log = LoggerFactory.getLogger(HealthHelpSpeechlet.class);
+	private static final Logger log = LoggerFactory.getLogger(HealthHelpSpeechlet.class);
+	private AnalyticsManager analytics;
 
-    @Override
-    public void onSessionStarted(final SessionStartedRequest request, final Session session)
-            throws SpeechletException {
-        log.info("onSessionStarted requestId={}, sessionId={}", request.getRequestId(),
-                session.getSessionId());
-        // any initialization logic goes here
-    }
+	@Override
+	public void onSessionStarted(final SessionStartedRequest request, final Session session) throws SpeechletException {
+		log.info("onSessionStarted requestId={}, sessionId={}", request.getRequestId(), session.getSessionId());
+		// any initialization logic goes here
+		analytics = new AnalyticsManager();
+		analytics.setUserId(session.getUser().getUserId());
+		analytics.postSessionEvent(AnalyticsManager.ACTION_SESSION_START);
+	}
 
-    @Override
-    public SpeechletResponse onLaunch(final LaunchRequest request, final Session session)
-            throws SpeechletException {
-        log.info("onLaunch requestId={}, sessionId={}", request.getRequestId(),
-                session.getSessionId());
-        return getWelcomeResponse();
-    }
+	@Override
+	public SpeechletResponse onLaunch(final LaunchRequest request, final Session session) throws SpeechletException {
+		log.info("onLaunch requestId={}, sessionId={}", request.getRequestId(), session.getSessionId());
+		analytics.postEvent(AnalyticsManager.CATEGORY_LAUNCH, "Welcome");
+		return SpeechletResponseHelper.getWelcome();
+	}
 
-    @Override
-    public SpeechletResponse onIntent(final IntentRequest request, final Session session)
-            throws SpeechletException {
-        log.info("onIntent requestId={}, sessionId={}", request.getRequestId(),
-                session.getSessionId());
+	@Override
+	public SpeechletResponse onIntent(final IntentRequest request, final Session session) throws SpeechletException {
+		log.info("onIntent requestId={}, sessionId={}", request.getRequestId(), session.getSessionId());
+//		try {
+			Intent intent = request.getIntent();
+			analytics.postEvent(AnalyticsManager.CATEGORY_INTENT, intent.getName());
+			String intentName = (intent != null) ? intent.getName() : null;
+			switch (intent.getName()) {
 
-        Intent intent = request.getIntent();
-        String intentName = (intent != null) ? intent.getName() : null;
+			case SpeechletResponseHelper.HEALTHHELP_WELCOME_INTENT_NAME:
+				return SpeechletResponseHelper.getResponse();
 
-        if ("HelloWorldIntent".equals(intentName)) {
-            return getHelloResponse();
-        } else if ("AMAZON.HelpIntent".equals(intentName)) {
-            return getHelpResponse();
-        } else {
-            throw new SpeechletException("Invalid Intent");
-        }
-    }
+			case SpeechletResponseHelper.APPOINTMENT_SCHEDULE_INTENT_NAME:
+				return getScheduleAppointmentResponse();
 
-    @Override
-    public void onSessionEnded(final SessionEndedRequest request, final Session session)
-            throws SpeechletException {
-        log.info("onSessionEnded requestId={}, sessionId={}", request.getRequestId(),
-                session.getSessionId());
-        // any cleanup logic goes here
-    }
+			case SpeechletResponseHelper.AMAZON_HELP_INTENT_NAME:
+				return getHelpResponse();
+			}
 
-    /**
-     * Creates and returns a {@code SpeechletResponse} with a welcome message.
-     *
-     * @return SpeechletResponse spoken and visual response for the given intent
-     */
-    private SpeechletResponse getWelcomeResponse() {
-        String speechText = "Welcome to the Alexa Skills Kit, you can say hello";
+//		} catch (InvalidInputException ex) {
+//			analytics.postException(ex.getMessage(), false);
+//			return SpeechletResponseHelper.newAskResponse(ex.getSpeech(), ex.getSpeech());
+//		}
+		return SpeechletResponseHelper.getWelcome();
+	}
 
-        // Create the Simple card content.
-        SimpleCard card = new SimpleCard();
-        card.setTitle("HelloWorld");
-        card.setContent(speechText);
+	@Override
+	public void onSessionEnded(final SessionEndedRequest request, final Session session) throws SpeechletException {
+		log.info("onSessionEnded requestId={}, sessionId={}", request.getRequestId(), session.getSessionId());
+		// any cleanup logic goes here
+	}
 
-        // Create the plain text output.
-        PlainTextOutputSpeech speech = new PlainTextOutputSpeech();
-        speech.setText(speechText);
+	/**
+	 * Creates and returns a {@code SpeechletResponse} with a welcome message.
+	 *
+	 * @return SpeechletResponse spoken and visual response for the given intent
+	 */
+	private SpeechletResponse getHealthHelpWelcomeResponse() {
+		String speechText = "Welcome to the Health help, How can I help you?";
 
-        // Create reprompt
-        Reprompt reprompt = new Reprompt();
-        reprompt.setOutputSpeech(speech);
+		// Create the Simple card content.
+		SimpleCard card = new SimpleCard();
+		card.setTitle("HealthHelp");
+		card.setContent(speechText);
 
-        return SpeechletResponse.newAskResponse(speech, reprompt, card);
-    }
+		// Create the plain text output.
+		PlainTextOutputSpeech speech = new PlainTextOutputSpeech();
+		speech.setText(speechText);
 
-    /**
-     * Creates a {@code SpeechletResponse} for the hello intent.
-     *
-     * @return SpeechletResponse spoken and visual response for the given intent
-     */
-    private SpeechletResponse getHelloResponse() {
-        String speechText = "Hello world";
+		// Create reprompt
+		Reprompt reprompt = new Reprompt();
+		reprompt.setOutputSpeech(speech);
 
-        // Create the Simple card content.
-        SimpleCard card = new SimpleCard();
-        card.setTitle("HelloWorld");
-        card.setContent(speechText);
+		return SpeechletResponse.newAskResponse(speech, reprompt, card);
+	}
 
-        // Create the plain text output.
-        PlainTextOutputSpeech speech = new PlainTextOutputSpeech();
-        speech.setText(speechText);
+	/**
+	 * Creates a {@code SpeechletResponse} for the help intent.
+	 *
+	 * @return SpeechletResponse spoken and visual response for the given intent
+	 */
+	private SpeechletResponse getHelpResponse() {
+		String speechText = "schedule an appointment";
 
-        return SpeechletResponse.newTellResponse(speech, card);
-    }
+		// Create the Simple card content.
+		SimpleCard card = new SimpleCard();
+		card.setTitle("HealthHelp");
+		card.setContent(speechText);
 
-    /**
-     * Creates a {@code SpeechletResponse} for the help intent.
-     *
-     * @return SpeechletResponse spoken and visual response for the given intent
-     */
-    private SpeechletResponse getHelpResponse() {
-        String speechText = "You can say hello to me!";
+		// Create the plain text output.
+		PlainTextOutputSpeech speech = new PlainTextOutputSpeech();
+		speech.setText(speechText);
 
-        // Create the Simple card content.
-        SimpleCard card = new SimpleCard();
-        card.setTitle("HelloWorld");
-        card.setContent(speechText);
+		// Create reprompt
+		Reprompt reprompt = new Reprompt();
+		reprompt.setOutputSpeech(speech);
 
-        // Create the plain text output.
-        PlainTextOutputSpeech speech = new PlainTextOutputSpeech();
-        speech.setText(speechText);
+		return SpeechletResponse.newAskResponse(speech, reprompt, card);
+	}
 
-        // Create reprompt
-        Reprompt reprompt = new Reprompt();
-        reprompt.setOutputSpeech(speech);
+	/**
+	 * Creates and returns a {@code SpeechletResponse} with a welcome message.
+	 *
+	 * @return SpeechletResponse spoken and visual response for the given intent
+	 */
+	private SpeechletResponse getScheduleAppointmentResponse() {
+		String speechText = "For Identification purpose please tell your last name and date of birth ?";
 
-        return SpeechletResponse.newAskResponse(speech, reprompt, card);
-    }
+		// Create the Simple card content.
+		SimpleCard card = new SimpleCard();
+		card.setTitle("HealthHelp");
+		card.setContent(speechText);
+
+		// Create the plain text output.
+		PlainTextOutputSpeech speech = new PlainTextOutputSpeech();
+		speech.setText(speechText);
+
+		// Create reprompt
+		Reprompt reprompt = new Reprompt();
+		reprompt.setOutputSpeech(speech);
+
+		return SpeechletResponse.newAskResponse(speech, reprompt, card);
+	}
 }
