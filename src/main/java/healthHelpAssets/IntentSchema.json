@@ -1,0 +1,32 @@
+{
+  "intents": [
+    {
+      "intent": "HealthHelp"
+    },
+    {
+      "intent": "AppointmentIntent"
+    },
+     {
+      "intent": "PatientIntent"
+    },
+    {
+      "intent": "AddPatientTntent",
+      "slots" : [
+         {
+          "name": "patient",
+          "type": "AMAZON.US_FIRST_NAME"
+        },
+        {
+         "name": "dob",
+          "type": "AMAZON.DATE"
+        }
+      ]
+     },
+    {
+      "intent": "GetPatientTntent"
+     },
+    {
+      "intent": "AMAZON.HelpIntent"
+    }
+  ]
+}

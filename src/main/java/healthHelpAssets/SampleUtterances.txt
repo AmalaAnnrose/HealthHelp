@@ -1,0 +1,6 @@
+HealthHelp hello healthHelp
+AppointmentIntent schedule an appointment
+PatientIntent new patient
+AddPatientTntent new appointment {patient} and {dob}
+GetPatientTntent what is my appointment date
+AMAZON.HelpIntent test
