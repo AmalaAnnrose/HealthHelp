@@ -1,5 +1,7 @@
 package com.sdlc.healthhelp;
 
+import java.util.Map;
+
 /**
     Copyright 2014-2015 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 
@@ -25,8 +27,12 @@ import com.amazon.speech.speechlet.SpeechletResponse;
 import com.amazon.speech.ui.PlainTextOutputSpeech;
 import com.amazon.speech.ui.Reprompt;
 import com.amazon.speech.ui.SimpleCard;
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.sdlc.healthhelp.util.AnalyticsManager;
 import com.sdlc.healthhelp.util.SpeechletResponseHelper;
+import com.sdlc.storage.DoctorDataItem;
+import com.sdlc.storage.HealthHelpDao;
+import com.sdlc.storage.HealthHelpDynamoDBClient;
 
 /**
  * This sample shows how to create a simple speechlet for handling speechlet
@@ -35,6 +41,9 @@ import com.sdlc.healthhelp.util.SpeechletResponseHelper;
 public class HealthHelpSpeechlet implements Speechlet {
 	private static final Logger log = LoggerFactory.getLogger(HealthHelpSpeechlet.class);
 	private AnalyticsManager analytics;
+	private AmazonDynamoDBClient amazonDynamoDBClient;
+	private HealthHelpDynamoDBClient healthHelpDynamoDBClient;
+	private HealthHelpDao healthHelpDao;
 
 	@Override
 	public void onSessionStarted(final SessionStartedRequest request, final Session session) throws SpeechletException {
@@ -66,10 +75,16 @@ public class HealthHelpSpeechlet implements Speechlet {
 
 			case SpeechletResponseHelper.APPOINTMENT_SCHEDULE_INTENT_NAME:
 				return getScheduleAppointmentResponse();
+				
+			case SpeechletResponseHelper.DOCTOR_INFO_INTENT_NAME:
+				return getDoctorInfoResponse();
 
 			case SpeechletResponseHelper.AMAZON_HELP_INTENT_NAME:
 				return getHelpResponse();
 			}
+			
+//			DoctorDataItem  doctordataItem = buildDoctorDataItem(session);
+//			saveDoctorInformation(doctordataItem);
 
 //		} catch (InvalidInputException ex) {
 //			analytics.postException(ex.getMessage(), false);
@@ -139,6 +154,70 @@ public class HealthHelpSpeechlet implements Speechlet {
 	 */
 	private SpeechletResponse getScheduleAppointmentResponse() {
 		String speechText = "For Identification purpose please tell your last name and date of birth ?";
+
+		// Create the Simple card content.
+		SimpleCard card = new SimpleCard();
+		card.setTitle("HealthHelp");
+		card.setContent(speechText);
+
+		// Create the plain text output.
+		PlainTextOutputSpeech speech = new PlainTextOutputSpeech();
+		speech.setText(speechText);
+
+		// Create reprompt
+		Reprompt reprompt = new Reprompt();
+		reprompt.setOutputSpeech(speech);
+
+		return SpeechletResponse.newAskResponse(speech, reprompt, card);
+	}
+	private AmazonDynamoDBClient getAmazonDynamoDBClient() {
+		if (this.amazonDynamoDBClient == null) {
+			this.amazonDynamoDBClient = new AmazonDynamoDBClient();
+		}
+		return this.amazonDynamoDBClient;
+	}
+
+	
+	public HealthHelpDynamoDBClient getHealthHelpDynamoDBClient() {
+		if(this.healthHelpDynamoDBClient == null){
+			this.healthHelpDynamoDBClient = new HealthHelpDynamoDBClient(getAmazonDynamoDBClient());
+		}
+		return this.healthHelpDynamoDBClient;
+	}
+
+
+	public HealthHelpDao getHealthHelpDao() {
+		if(this.healthHelpDao == null){
+			this.healthHelpDao = new HealthHelpDao(getHealthHelpDynamoDBClient());
+		}
+		return healthHelpDao;
+	}
+
+	private void saveDoctorInformation(DoctorDataItem input) {
+		getHealthHelpDao().saveDoctorinfo(input);
+
+	}
+	
+	private DoctorDataItem buildDoctorDataItem(Session session) {
+		// TODO: Make Session Data be a PaInput
+		// Map<String,String> sessionData= getInputValuesFromSession();
+		Map<String, Object> sessionData = session.getAttributes();
+		DoctorDataItem doctorDataItem = new DoctorDataItem();
+		doctorDataItem.setDoctAddress("Pittsburgh");
+		doctorDataItem.setDoctName("Jasiel");
+		doctorDataItem.setDoctorId("456");
+		doctorDataItem.setDoctPhone("41298756890");
+		doctorDataItem.setDoctSpecialt("Pediatrician");
+		
+		return doctorDataItem;
+	}
+	
+	private SpeechletResponse getDoctorInfoResponse() {
+		
+		DoctorDataItem doctorDataItem = new DoctorDataItem();
+		doctorDataItem.setDoctorId("1");
+		DoctorDataItem info = getHealthHelpDao().findDoctorInfor(doctorDataItem);
+		String speechText = info.getDoctName();
 
 		// Create the Simple card content.
 		SimpleCard card = new SimpleCard();

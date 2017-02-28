@@ -27,7 +27,8 @@ private static final String INITIAL_SPEECH = " How Can I help you ?";
 
 //INTENTS
 	public static final String HEALTHHELP_WELCOME_INTENT_NAME = "HealthHelpWelcomeIntent";
-	public static final String APPOINTMENT_SCHEDULE_INTENT_NAME = "AppointmentScheduleIntent";
+	public static final String APPOINTMENT_SCHEDULE_INTENT_NAME = "AppointmentIntent";
+	public static final String DOCTOR_INFO_INTENT_NAME = "DoctorInfoIntent";
 	public static final String AMAZON_HELP_INTENT_NAME = "AMAZON.HelpIntent";
 
 public static SpeechletResponse getWelcome(){
